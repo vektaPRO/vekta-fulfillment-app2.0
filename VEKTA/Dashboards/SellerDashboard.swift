@@ -1,10 +1,14 @@
-// MARK: - SellerDashboard.swift
+// MARK: - Fix 3: Исправленный SellerDashboard.swift
+import SwiftUI
+import FirebaseAuth
+
 struct SellerDashboard: View {
     let user: UserModel
     
     var body: some View {
         NavigationView {
             VStack(spacing: 20) {
+                // Заголовок
                 HStack {
                     VStack(alignment: .leading) {
                         Text("Добро пожаловать, \(user.displayName)")
@@ -21,6 +25,7 @@ struct SellerDashboard: View {
                 }
                 .padding()
                 
+                // Статистика
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 16) {
                     StatCard(title: "Мои товары", value: "45", icon: "cube.box")
                     StatCard(title: "Заказы сегодня", value: "12", icon: "cart")
@@ -29,6 +34,7 @@ struct SellerDashboard: View {
                 }
                 .padding(.horizontal)
                 
+                // Действия
                 VStack(spacing: 12) {
                     NavigationLink(destination: MyProductsView()) {
                         ActionButton(title: "Мои товары", icon: "cube.box.fill", color: .blue)

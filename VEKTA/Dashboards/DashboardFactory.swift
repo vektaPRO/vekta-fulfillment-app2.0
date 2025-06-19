@@ -1,7 +1,6 @@
-// MARK: - DashboardFactory.swift
 import SwiftUI
 
-struct dashboardFactory {
+struct DashboardFactory {
     static func createDashboard(for role: UserRole, user: UserModel) -> some View {
         switch role {
         case .superadmin:

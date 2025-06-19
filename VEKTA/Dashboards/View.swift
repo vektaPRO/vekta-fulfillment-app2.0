@@ -1,6 +1,8 @@
 // MARK: - Общие UI компоненты
 
-import SwiftUICore
+import SwiftUI
+import FirebaseAuth
+
 struct StatCard: View {
     let title: String
     let value: String

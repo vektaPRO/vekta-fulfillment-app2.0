@@ -1,9 +1,13 @@
+import SwiftUI
+import FirebaseAuth
+
 struct CourierDashboard: View {
     let user: UserModel
     
     var body: some View {
         NavigationView {
             VStack(spacing: 20) {
+                // Заголовок
                 HStack {
                     VStack(alignment: .leading) {
                         Text("Добро пожаловать, \(user.displayName)")
@@ -20,6 +24,7 @@ struct CourierDashboard: View {
                 }
                 .padding()
                 
+                // Статистика
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 16) {
                     StatCard(title: "Назначено", value: "8", icon: "tray.full")
                     StatCard(title: "Доставлено", value: "25", icon: "checkmark.circle")
@@ -28,6 +33,7 @@ struct CourierDashboard: View {
                 }
                 .padding(.horizontal)
                 
+                // Действия
                 VStack(spacing: 12) {
                     NavigationLink(destination: MyDeliveriesView()) {
                         ActionButton(title: "Мои доставки", icon: "truck.box.fill", color: .blue)
