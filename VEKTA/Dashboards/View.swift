@@ -1,5 +1,4 @@
-// MARK: - Общие UI компоненты
-
+// MARK: - UI компоненты
 import SwiftUI
 import FirebaseAuth
 

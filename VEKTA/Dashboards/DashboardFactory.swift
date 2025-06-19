@@ -1,3 +1,4 @@
+// MARK: - DashboardFactory.swift
 import SwiftUI
 
 struct DashboardFactory {
