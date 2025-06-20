@@ -1,17 +1,38 @@
-// MARK: - UserModel.swift (улучшенная версия)
+// MARK: - UserModel.swift
 import FirebaseFirestore
 import Foundation
 
 struct UserModel: Identifiable, Codable {
     @DocumentID var id: String?
     var email: String
-    var displayName: String // Добавил для отображения в UI
+    var displayName: String
     var role: UserRole
     var warehouseId: String? // nil для SuperAdmin
     var uid: String // Firebase Auth UID для связи
-    var isActive: Bool = true // Для деактивации пользователей
+    var isActive: Bool = true
     var createdAt: Date
     var updatedAt: Date
+    
+    // Добавляем инициализатор для совместимости
+    init(id: String? = nil,
+         email: String,
+         displayName: String,
+         role: UserRole,
+         warehouseId: String? = nil,
+         uid: String,
+         isActive: Bool = true,
+         createdAt: Date = Date(),
+         updatedAt: Date = Date()) {
+        self.id = id
+        self.email = email
+        self.displayName = displayName
+        self.role = role
+        self.warehouseId = warehouseId
+        self.uid = uid
+        self.isActive = isActive
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
 }
 
 enum UserRole: String, Codable, CaseIterable {

@@ -17,12 +17,14 @@ class AppState: ObservableObject {
     @Published var isLoadingAuth: Bool = true
     @Published var currentScreen: AppScreen = .onboarding
     
-    // Role Management
-    @StateObject var roleManager = RoleManager()
+    // ИСПРАВЛЕНО: Убираем @StateObject и используем обычное свойство
+    let roleManager = RoleManager()
     
     private var authStateHandler: AuthStateDidChangeListenerHandle?
+    private var cancellables = Set<AnyCancellable>()
     
     init() {
+        setupRoleManagerBinding()
         setupAuthenticationListener()
     }
     
@@ -30,18 +32,33 @@ class AppState: ObservableObject {
         removeAuthenticationListener()
     }
     
+    // ДОБАВЛЕНО: Привязка к изменениям RoleManager
+    private func setupRoleManagerBinding() {
+        roleManager.objectWillChange
+            .sink { [weak self] in
+                DispatchQueue.main.async {
+                    self?.objectWillChange.send()
+                }
+            }
+            .store(in: &cancellables)
+    }
+    
     func setupAuthenticationListener() {
         if authStateHandler == nil {
             authStateHandler = Auth.auth().addStateDidChangeListener { [weak self] auth, user in
                 DispatchQueue.main.async {
+                    print("🔐 Auth state changed. User: \(user?.uid ?? "nil")")
+                    
                     withAnimation(.easeInOut) {
                         self?.isAuthenticated = (user != nil)
                         self?.isLoadingAuth = false
                         
                         // Загружаем роль пользователя, если он авторизован
                         if let user = user {
+                            print("🔍 Fetching user role for: \(user.uid)")
                             self?.roleManager.fetchUserRole(for: user.uid)
                         } else {
+                            print("🧹 Clearing user data")
                             self?.roleManager.clearCurrentUser()
                         }
                     }
@@ -58,14 +75,15 @@ class AppState: ObservableObject {
     }
     
     func signInUser(email: String, password: String) {
+        print("🔐 Attempting to sign in: \(email)")
         Auth.auth().signIn(withEmail: email, password: password) { [weak self] authResult, error in
             DispatchQueue.main.async {
                 if let error = error {
-                    print("Ошибка входа: \(error.localizedDescription)")
+                    print("❌ Login error: \(error.localizedDescription)")
                     // TODO: Показать пользователю Alert с ошибкой
                     return
                 }
-                print("Пользователь успешно вошел.")
+                print("✅ User signed in successfully: \(authResult?.user.uid ?? "unknown")")
             }
         }
     }
@@ -87,6 +105,14 @@ struct VEKTAApp: App {
     
     init() {
         FirebaseApp.configure()
+        print("🔥 Firebase configured successfully")
+        
+        // Проверяем текущего пользователя
+        if let currentUser = Auth.auth().currentUser {
+            print("👤 Current user found: \(currentUser.uid)")
+        } else {
+            print("👤 No current user found")
+        }
     }
     
     var body: some Scene {
@@ -152,6 +178,16 @@ struct LoadingView: View {
             Text("Загрузка...")
                 .font(.headline)
                 .foregroundColor(.gray)
+            
+            // Показываем текущее состояние
+            if let currentUser = Auth.auth().currentUser {
+                Text("Загружаем данные пользователя...")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                Text("UID: \(currentUser.uid)")
+                    .font(.caption2)
+                    .foregroundColor(.gray)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.systemBackground))
