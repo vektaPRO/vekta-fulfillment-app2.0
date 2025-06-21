@@ -11,7 +11,8 @@ struct CreateReceivingOrderView: View {
     @State private var selectedWarehouse: String = ""
     @State private var warehouses: [WarehouseModel] = []
     @State private var isLoading = false
-    @StateObject private var qrGenerator = QRCodeGenerator()
+    @State private var showQRCodes = false
+    @State private var qrProducts: [ReceivingProduct] = []
     
     @Environment(\.presentationMode) var presentationMode
     
@@ -130,8 +131,8 @@ struct CreateReceivingOrderView: View {
                     selectedProducts.append(product)
                 }
             }
-            .sheet(isPresented: $qrGenerator.showQRCodes) {
-                QRCodesView(qrCodes: qrGenerator.generatedQRCodes)
+            .sheet(isPresented: $showQRCodes) {
+                QRCodesView(products: qrProducts)
             }
         }
         .onAppear {
@@ -177,13 +178,11 @@ struct CreateReceivingOrderView: View {
         let db = Firestore.firestore()
         
         do {
-            let ref = try db.collection("receivingOrders").addDocument(from: receivingOrder)
-            
-            // Генерируем QR коды для каждого товара
-            qrGenerator.generateQRCodes(for: receivingOrder, orderId: ref.documentID)
-            
+            try db.collection("receivingOrders").addDocument(from: receivingOrder)
+
+            qrProducts = selectedProducts
+            showQRCodes = true
             isLoading = false
-            presentationMode.wrappedValue.dismiss()
             
         } catch {
             print("Ошибка создания заказа: \(error)")
@@ -275,7 +274,7 @@ struct AddProductToReceivingView: View {
 }
 
 struct QRCodesView: View {
-    let qrCodes: [QRCodeData]
+    let products: [ReceivingProduct]
     @Environment(\.presentationMode) var presentationMode
     
     var body: some View {
@@ -290,27 +289,22 @@ struct QRCodesView: View {
                     Text("Распечатайте и наклейте на товары")
                         .foregroundColor(.gray)
                     
-                    ForEach(qrCodes) { qrData in
+                    ForEach(products) { product in
                         VStack(spacing: 12) {
-                            if let qrImage = qrData.image {
-                                Image(uiImage: qrImage)
-                                    .interpolation(.none)
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 200, height: 200)
-                                    .padding()
-                                    .background(Color.white)
-                                    .cornerRadius(12)
-                                    .shadow(radius: 4)
-                            }
-                            
+                            QRCodeView(data: QRService.shared.dataForProduct(product))
+                                .frame(width: 150, height: 150)
+                                .padding()
+                                .background(Color.white)
+                                .cornerRadius(12)
+                                .shadow(radius: 4)
+
                             VStack(spacing: 4) {
-                                Text(qrData.productName)
+                                Text(product.name)
                                     .font(.headline)
-                                Text("SKU: \(qrData.productSKU)")
+                                Text("SKU: \(product.sku)")
                                     .font(.caption)
                                     .foregroundColor(.gray)
-                                Text("Кол-во: \(qrData.quantity) шт.")
+                                Text("Кол-во: \(product.quantity) шт.")
                                     .font(.caption)
                                     .foregroundColor(.gray)
                             }
@@ -357,69 +351,3 @@ enum ReceivingStatus: String, Codable {
     case cancelled = "cancelled"
 }
 
-struct QRCodeData: Identifiable {
-    let id = UUID()
-    let productName: String
-    let productSKU: String
-    let quantity: Int
-    let orderId: String
-    let image: UIImage?
-}
-
-// MARK: - QR Code Generator
-
-import CoreImage.CIFilterBuiltins
-
-class QRCodeGenerator: ObservableObject {
-    @Published var generatedQRCodes: [QRCodeData] = []
-    @Published var showQRCodes = false
-    
-    private let context = CIContext()
-    private let filter = CIFilter.qrCodeGenerator()
-    
-    func generateQRCodes(for order: ReceivingOrder, orderId: String) {
-        generatedQRCodes = order.products.map { product in
-            let qrData = createQRCodeData(
-                orderId: orderId,
-                productId: product.id,
-                sku: product.sku,
-                quantity: product.quantity
-            )
-            
-            let image = generateQRCode(from: qrData)
-            
-            return QRCodeData(
-                productName: product.name,
-                productSKU: product.sku,
-                quantity: product.quantity,
-                orderId: orderId,
-                image: image
-            )
-        }
-        
-        showQRCodes = true
-    }
-    
-    private func createQRCodeData(orderId: String, productId: String, sku: String, quantity: Int) -> String {
-        // Формат: VEKTA:ORDER_ID:PRODUCT_ID:SKU:QTY
-        return "VEKTA:\(orderId):\(productId):\(sku):\(quantity)"
-    }
-    
-    private func generateQRCode(from string: String) -> UIImage? {
-        filter.message = Data(string.utf8)
-        
-        if let outputImage = filter.outputImage {
-            if let cgimg = context.createCGImage(outputImage, from: outputImage.extent) {
-                let scale: CGFloat = 10
-                let transform = CGAffineTransform(scaleX: scale, y: scale)
-                let scaledImage = outputImage.transformed(by: transform)
-                
-                if let scaledCGImage = context.createCGImage(scaledImage, from: scaledImage.extent) {
-                    return UIImage(cgImage: scaledCGImage)
-                }
-            }
-        }
-        
-        return nil
-    }
-}

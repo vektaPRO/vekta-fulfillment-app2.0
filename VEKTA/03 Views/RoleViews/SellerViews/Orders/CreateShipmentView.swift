@@ -338,11 +338,8 @@ struct ShipmentQRCodeView: View {
                             .font(.title2)
                             .fontWeight(.bold)
                         
-                        QRCodeView(data: shipment.qrCode ?? "")
-                            .frame(width: 250, height: 250)
-                            .background(Color.white)
-                            .cornerRadius(12)
-                            .shadow(radius: 5)
+                        QRCodeView(data: QRService.shared.dataForShipment(shipment))
+                            .frame(width: 200, height: 200)
                         
                         Text("ID: \(shipment.id ?? "")")
                             .font(.caption)

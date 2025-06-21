@@ -129,10 +129,8 @@ struct ProductCard: View {
     var body: some View {
         HStack(spacing: 16) {
             // QR код товара
-            QRCodeView(data: product.qrData)
-                .frame(width: 60, height: 60)
-                .background(Color.gray.opacity(0.1))
-                .cornerRadius(8)
+            QRCodeView(data: QRService.shared.dataForProduct(product))
+                .frame(width: 200, height: 200)
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(product.name)
