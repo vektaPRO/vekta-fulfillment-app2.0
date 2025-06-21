@@ -29,6 +29,11 @@ final class QRService {
         return "product:\(product.id ?? "")"
     }
 
+    /// Returns a string representation for the given receiving product to use in a QR code.
+    func dataForProduct(_ product: ReceivingProduct) -> String {
+        return "product:\(product.id)"
+    }
+
     /// Returns a string representation for the given shipment to use in a QR code.
     func dataForShipment(_ shipment: ShipmentModel) -> String {
         return "shipment:\(shipment.id ?? "")"
