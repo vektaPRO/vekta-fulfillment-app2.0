@@ -1,6 +1,5 @@
 import SwiftUI
 import FirebaseFirestore
-import AVFoundation
 
 // MARK: - Warehouse Receiving View
 struct WarehouseReceivingView: View {
@@ -62,8 +61,8 @@ struct WarehouseReceivingView: View {
             .navigationTitle("Приемка товаров")
             .sheet(isPresented: $showingScanner) {
                 QRScannerView { qrCode in
-                    viewModel.processQRCode(qrCode)
                     showingScanner = false
+                    viewModel.confirmReception(for: qrCode)
                 }
             }
             .sheet(isPresented: $showingManualInput) {
@@ -74,6 +73,16 @@ struct WarehouseReceivingView: View {
             }
             .sheet(item: $selectedShipment) { shipment in
                 ShipmentDetailView(shipment: shipment)
+            }
+            .alert("Ошибка", isPresented: .constant(viewModel.errorMessage != nil)) {
+                Button("OK") { viewModel.errorMessage = nil }
+            } message: {
+                Text(viewModel.errorMessage ?? "")
+            }
+            .alert("Успех", isPresented: .constant(viewModel.successMessage != nil)) {
+                Button("OK") { viewModel.successMessage = nil }
+            } message: {
+                Text(viewModel.successMessage ?? "")
             }
         }
         .onAppear {
