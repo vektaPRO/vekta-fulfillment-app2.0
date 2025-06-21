@@ -36,8 +36,8 @@ struct SellerDashboard: View {
                 
                 // Действия
                 VStack(spacing: 12) {
-                    NavigationLink(destination: MyProductsView()) {
-                        ActionButton(title: "Мои товары", icon: "cube.box.fill", color: .blue)
+                    NavigationLink(destination: CreateReceivingOrderView()) {
+                        ActionButton(title: "Создать приемку", icon: "tray.and.arrow.down.fill", color: .blue)
                     }
                     
                     NavigationLink(destination: MyOrdersView()) {
