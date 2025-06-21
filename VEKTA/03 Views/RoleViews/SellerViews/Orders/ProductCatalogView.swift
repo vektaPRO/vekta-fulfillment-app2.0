@@ -268,22 +268,6 @@ struct AddProductView: View {
     }
 }
 
-// MARK: - QR Code View
-struct QRCodeView: View {
-    let data: String
-    
-    var body: some View {
-        // Заглушка для QR кода
-        ZStack {
-            Rectangle()
-                .fill(Color.gray.opacity(0.1))
-            
-            Image(systemName: "qrcode")
-                .font(.title)
-                .foregroundColor(.gray.opacity(0.5))
-        }
-    }
-}
 
 // MARK: - View Models
 class ProductCatalogViewModel: ObservableObject {
