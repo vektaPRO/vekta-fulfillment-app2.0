@@ -3,12 +3,12 @@ import SwiftUI
 class DeliveryDetailViewModel: ObservableObject {
     func sendSmsCode(orderId: String) {
         // Здесь будет вызов API Kaspi для отправки SMS через заглушку
-        print("📲 Отправляем SMS-код для заказа: \(orderId)")
+        AlertManager.shared.show(error: AppError.custom("Отправляем SMS-код для заказа: \(orderId)"))
     }
 
     func markDelivered(orderId: String, smsCode: String) {
         // Здесь будет подтверждение доставки через API
-        print("✅ Подтверждаем доставку заказа \(orderId) с кодом \(smsCode)")
+        AlertManager.shared.show(error: AppError.custom("Подтверждаем доставку заказа \(orderId) с кодом \(smsCode)"))
     }
 }
 

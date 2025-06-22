@@ -3,6 +3,9 @@ import Firebase
 import FirebaseAuth
 import Combine
 
+// Ошибки и менеджер отображения
+import UIKit
+
 // MARK: - App Screen State
 enum AppScreen {
     case onboarding
@@ -47,18 +50,14 @@ class AppState: ObservableObject {
         if authStateHandler == nil {
             authStateHandler = Auth.auth().addStateDidChangeListener { [weak self] auth, user in
                 DispatchQueue.main.async {
-                    print("🔐 Auth state changed. User: \(user?.uid ?? "nil")")
-                    
                     withAnimation(.easeInOut) {
                         self?.isAuthenticated = (user != nil)
                         self?.isLoadingAuth = false
-                        
+
                         // Загружаем роль пользователя, если он авторизован
                         if let user = user {
-                            print("🔍 Fetching user role for: \(user.uid)")
                             self?.roleManager.fetchUserRole(for: user.uid)
                         } else {
-                            print("🧹 Clearing user data")
                             self?.roleManager.clearCurrentUser()
                         }
                     }
@@ -74,16 +73,17 @@ class AppState: ObservableObject {
         }
     }
     
-    func signInUser(email: String, password: String) {
-        print("🔐 Attempting to sign in: \(email)")
+    func signInUser(email: String, password: String, retries: Int = 3) {
         Auth.auth().signIn(withEmail: email, password: password) { [weak self] authResult, error in
             DispatchQueue.main.async {
                 if let error = error {
-                    print("❌ Login error: \(error.localizedDescription)")
-                    // TODO: Показать пользователю Alert с ошибкой
+                    if retries > 1 {
+                        self?.signInUser(email: email, password: password, retries: retries - 1)
+                    } else {
+                        AlertManager.shared.show(error: AppError.auth(error))
+                    }
                     return
                 }
-                print("✅ User signed in successfully: \(authResult?.user.uid ?? "unknown")")
             }
         }
     }
@@ -93,7 +93,7 @@ class AppState: ObservableObject {
             try Auth.auth().signOut()
             roleManager.clearCurrentUser()
         } catch {
-            print("Ошибка выхода: \(error.localizedDescription)")
+            AlertManager.shared.show(error: AppError.auth(error))
         }
     }
 }
@@ -105,14 +105,6 @@ struct VEKTAApp: App {
     
     init() {
         FirebaseApp.configure()
-        print("🔥 Firebase configured successfully")
-        
-        // Проверяем текущего пользователя
-        if let currentUser = Auth.auth().currentUser {
-            print("👤 Current user found: \(currentUser.uid)")
-        } else {
-            print("👤 No current user found")
-        }
     }
     
     var body: some Scene {

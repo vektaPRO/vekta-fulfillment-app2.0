@@ -562,7 +562,7 @@ class ProductPickerViewModel: ObservableObject {
     
     private let db = Firestore.firestore()
     
-    func loadProducts() {
+    func loadProducts(retries: Int = 3) {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
         isLoading = true
@@ -572,9 +572,13 @@ class ProductPickerViewModel: ObservableObject {
             .whereField("isActive", isEqualTo: true)
             .getDocuments { [weak self] snapshot, error in
                 self?.isLoading = false
-                
+
                 if let error = error {
-                    print("Error loading products: \(error)")
+                    if retries > 1 {
+                        self?.loadProducts(retries: retries - 1)
+                    } else {
+                        AlertManager.shared.show(error: AppError.firebase(error))
+                    }
                     return
                 }
                 

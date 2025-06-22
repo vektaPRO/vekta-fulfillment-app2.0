@@ -183,9 +183,9 @@ struct CreateReceivingOrderView: View {
             qrProducts = selectedProducts
             showQRCodes = true
             isLoading = false
-            
+
         } catch {
-            print("Ошибка создания заказа: \(error)")
+            AlertManager.shared.show(error: AppError.firebase(error))
             isLoading = false
         }
     }
