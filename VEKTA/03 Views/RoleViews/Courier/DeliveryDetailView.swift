@@ -1,14 +1,29 @@
 import SwiftUI
+import FirebaseFunctions
 
 class DeliveryDetailViewModel: ObservableObject {
+    private let functions = Functions.functions()
+
     func sendSmsCode(orderId: String) {
-        // Здесь будет вызов API Kaspi для отправки SMS через заглушку
-        print("📲 Отправляем SMS-код для заказа: \(orderId)")
+        let data: [String: Any] = ["orderId": orderId]
+        functions.httpsCallable("sendSmsCode").call(data) { result, error in
+            if let error = error {
+                print("❌ Ошибка отправки SMS-кода: \(error.localizedDescription)")
+            } else {
+                print("📲 SMS-код отправлен для заказа \(orderId)")
+            }
+        }
     }
 
     func markDelivered(orderId: String, smsCode: String) {
-        // Здесь будет подтверждение доставки через API
-        print("✅ Подтверждаем доставку заказа \(orderId) с кодом \(smsCode)")
+        let data: [String: Any] = ["orderId": orderId, "smsCode": smsCode]
+        functions.httpsCallable("confirmSmsCode").call(data) { result, error in
+            if let error = error {
+                print("❌ Ошибка подтверждения доставки: \(error.localizedDescription)")
+            } else {
+                print("✅ Доставка подтверждена для заказа \(orderId)")
+            }
+        }
     }
 }
 
